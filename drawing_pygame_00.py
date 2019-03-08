@@ -3,7 +3,7 @@
 """
 Created on Wed Mar  6 09:56:49 2019
 
-@author: cadek
+@author: MCA
 """
 
 import pygame as pg
