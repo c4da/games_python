@@ -13,7 +13,7 @@ from pygame.locals import *
 #from pygame.color import THECOLORS
 from math import radians, cos, sin
 # PyGame gui
-from pgu import gui
+#from pgu import gui
 
 # Import the vector class from a local module (in this same directory)
 #from vec2d_jdm import Vec2D
