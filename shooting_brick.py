@@ -124,7 +124,7 @@ class Line(pg.sprite.Sprite):
         pg.draw.line(self.image, pg.Color('dodgerblue'), (0, 16), (100, 16), 5)
         self.org_image = self.image.copy()
         self.rect = self.image.get_rect(center=(170, 380))
-        self.pos = pg.Vector2(self.rect.center)
+        self.pos = pg.math.Vector2(self.rect.center)
         
     def rotate(self, img, pos, angle):
         w, h = img.get_size()
