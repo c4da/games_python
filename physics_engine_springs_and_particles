@@ -1,0 +1,205 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Mar 19 19:13:30 2019
+
+@author: MCA
+"""
+
+import pygame as pg
+import random
+import math, sys
+
+WHITE = 255,255,255
+BLACK = 0,0,0
+BLUE = 0,0,255
+
+
+def addVectors(vector1, vector2):
+    (angle1, length1) = vector1
+    (angle2, length2) = vector2
+    x  = math.sin(angle1) * length1 + math.sin(angle2) * length2
+    y  = math.cos(angle1) * length1 + math.cos(angle2) * length2
+    
+    angle = 0.5 * math.pi - math.atan2(y, x)
+    length  = math.hypot(x, y)
+
+    return (angle, length)
+
+
+class Particle:
+    """
+    particle coords - speed components:
+        we are using two sets of coords, one rounded to int to display, the second with float precision to do the calculations
+        
+    moving the particle:
+        we use a speed vector, that consists of an angle and its length
+        vector = (angle, speed)
+        
+    adding gravity:
+        because we dont work with vector dvx, dvy components we have recalculate the speed mag 
+        we do this by summing up the speed vector with a gravity vector (pi, 9.81)
+        note: pi points upwards
+    """
+    def __init__(self, pos, size):
+        self.f_x = pos[0]
+        self.f_y = pos[1]
+        self.x = round(pos[0]) 
+        self.y = round(pos[1])
+        self.size = size
+        self.colour = BLUE
+        self.thickness = 1
+        self.speed = 0
+        self.angle = 0
+        self.grav = (math.pi, 0.002)
+        self.drag = 0.999
+        self.coeff_restitution = 0.9
+            
+    def display(self):
+        
+        pg.draw.circle(screen, self.colour, (self.x, self.y), self.size, self.thickness)
+    
+    def bounce(self):
+        if (self.x + self.size) > width:
+#            overstep = self.x - (width - self.size)
+#            self.x = (width - self.size) - overstep
+            self.x = width - self.size
+            self.angle = -self.angle
+            self.speed *= self.coeff_restitution
+    
+        if self.x < self.size:
+#            overstep = self.x - self.size
+#            self.x = self.size + overstep
+            self.x = self.size
+            self.angle = -self.angle
+            self.speed *= self.coeff_restitution
+        
+        if self.y < self.size:
+#            overstep = self.y - self.size
+#            self.y = self.size + overstep
+            self.y = self.size
+            self.angle = math.pi -self.angle
+            self.speed *= self.coeff_restitution
+        
+        if self.y > (height - self.size):
+#            self.y = 2*(height - self.size) - self.y
+#            overstep = self.y - height - self.size
+            self.y = (height - self.size) 
+            self.angle = math.pi -self.angle
+            self.speed *= self.coeff_restitution
+    
+    def move(self):
+        
+        vec1 = (self.angle, self.speed)
+        (self.angle, self.speed) = addVectors(vec1, self.grav)
+        
+        self.f_x += math.sin(self.angle) * self.speed
+        self.f_y -= math.cos(self.angle) * self.speed 
+        
+        self.x = round(self.f_x)
+        self.y = round(self.f_y)
+        self.speed *= self.drag
+        
+
+
+def check_events(selected_particle):
+    mousePos = None
+    for event in pg.event.get():
+        if event.type == pg.QUIT:
+            running = False
+            pg.quit()
+            sys.exit(0)
+        if event.type == pg.MOUSEBUTTONDOWN:
+            mousePos = pg.mouse.get_pos()
+
+        elif event.type == pg.MOUSEBUTTONUP:
+            selected_particle = None
+            
+    return mousePos, selected_particle
+
+
+def findParticle(particles, mousePos):
+    x, y = mousePos
+    for particle in particles:
+        if math.hypot(particle.x - x, particle.y - y) <= particle.size:
+            return particle
+    return None
+        
+   
+def collide(obj1, obj2):
+    dx = abs(obj1.x - obj2.x)
+    dy = abs(obj1.y - obj2.y)
+    if dy!=0:
+        distance = math.hypot(dx,dy)
+    else:
+        distance = dx
+        
+    if distance < (obj1.size + obj2.size):
+        print(distance, obj1.size + obj2.size)
+        print("true")
+    
+
+
+
+(width, height) = (600, 400)
+
+screen = pg.display.set_mode((width, height))
+screen.fill(WHITE)
+pg.display.set_caption("bouncing balls")
+
+num_of_particles = 3
+particles = []
+
+for i in range(num_of_particles):
+    
+    size = random.randint(10, 20)
+    x = random.randint(0,width-size)
+    y = random.randint(0,height-size)
+    
+    particle = Particle((x,y), size)
+    particle.speed = 0.1
+    particle.angle = random.uniform(0, math.pi*2)
+    particles.append(particle)
+    
+
+
+selected_particle = None
+running = True
+while running:
+    mousePos, selected_particle = check_events(selected_particle)        
+    
+    if mousePos != None:
+        mouseX, mouseY = mousePos
+        selected_particle = findParticle(particles, mousePos)
+    
+    screen.fill(WHITE)
+    
+    
+    if selected_particle:
+        selected_particle.colour = (255,0,0)
+        (mouseX, mouseY) = pg.mouse.get_pos()
+        dx = mouseX - selected_particle.x
+        dy = mouseY - selected_particle.y
+        selected_particle.angle = math.atan2(dy, dx) + 0.5*math.pi
+        selected_particle.speed = math.hypot(dx, dy) * 0.1
+
+
+    for i, particle in enumerate(particles):
+#        if particle != selected_particle:
+#            particle.colour = BLUE
+            particle.move()
+            particle.bounce()
+            if particle != selected_particle:
+                particle.colour = BLUE
+            print(i)    
+            #collisions
+            for particle2 in (particles[:i]+particles[i+1:]):
+                collide(particle, particle2)
+#            for particle2 in particles[i:]:
+#                collide(particle, particle2)
+                
+            particle.display()
+    
+
+    
+    pg.display.flip()
+        
