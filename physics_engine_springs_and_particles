@@ -2,7 +2,7 @@
 """
 Created on Tue Mar 19 19:13:30 2019
 
-@author: MCA
+@author: cada
 """
 
 import pygame as pg
@@ -134,8 +134,10 @@ def collide(obj1, obj2):
         distance = dx
         
     if distance < (obj1.size + obj2.size):
-        print(distance, obj1.size + obj2.size)
-        print("true")
+#        print(distance, obj1.size + obj2.size)
+#        print("true")
+        obj1.speed, obj2.speed = obj2.speed, obj1.speed
+        obj1.angle, obj2.angle = obj2.angle, obj1.angle
     
 
 
